@@ -1,9 +1,10 @@
-module alu(A,B,ALUControl,Result);
+module alu(A,B,ALUControl,Result,Z,N,V,C);
 
 //declare input and output variables
     input [31:0] A,B;
     input [2:0] ALUControl;
     output [31:0] Result;
+    output Z,N,V,C; // Z- zero flag, n-negative flag, v-overflow flag, c-carry flag
 
 //declare wires
     wire [31:0] a_and_b;
@@ -12,6 +13,8 @@ module alu(A,B,ALUControl,Result);
     wire [31:0] mux_1;
     wire [31:0] sum;
     wire [31:0] mux_2;
+    wire [31:0] slt;
+    wire cout;
     
 
 
@@ -23,15 +26,29 @@ module alu(A,B,ALUControl,Result);
     assign mux_1 = (ALUControl[0] == 1'b0) ? B : not_b; //turnary operator
 
     //addition and subtraction operation
-    assign sum = A + mux_1 + ALUControl[0]; // this will handle the addition and subtraction. Subtraction is done by using 2s complement 
+    assign {cout,sum} = A + mux_1 + ALUControl[0]; // this will handle the addition and subtraction. Subtraction is done by using 2s complement 
+
+    assign slt = {31'b0000000000000000000000000000000,sum[31]};
 
     // 4:1 mux
-    assign mux_2 =  (ALUControl[1:0] == 2'b00 ) ? sum : 
-                    (ALUControl[1:0] == 2'b01)? sum: 
-                    (ALUControl[1:0] = 2'b10)? a_and_b : a_or_b;
+    assign mux_2 =  (ALUControl[2:0] == 3'b000 ) ? sum : 
+                    (ALUControl[2:0] == 3'b001)? sum: 
+                    (ALUControl[2:0] = 3'b010)? a_and_b :
+                    (ALUControl[2:0] = 3'b011)?  a_or_b :
+                    (ALUControl[2:0] = 3'b101)?  slt : 32'h00000000 ;
 
 
     assign Result = mux_2;
+
+    // flags assignment
+    assign Z  = &(~Result); //Zero flag generation
+    assign N = Result[31]; //negative flag
+
+    assign C = cout & (~ALUControl[1])
+
+    assign V = (~ALUControl[1]) & (A[31] ^ sum[31]) & (~(A[31] ^ B[31] ^ ALUControl[0]));
+
+
 
 endmodule
 
