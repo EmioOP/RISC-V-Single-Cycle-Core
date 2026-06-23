@@ -1,4 +1,4 @@
-module alu(A,B,ALUControl,Result,Z,N,V,C);
+module ALU(A,B,ALUControl,Result,Z,N,V,C);
 
 //declare input and output variables
     input [31:0] A,B;
@@ -39,6 +39,7 @@ module alu(A,B,ALUControl,Result,Z,N,V,C);
 
 
     assign Result = mux_2;
+    
 
     // flags assignment
     assign Z  = &(~Result); //Zero flag generation

@@ -1,4 +1,4 @@
-module pc (PC_NEXT,PC,rst,clk);
+module PC (PC_NEXT,PC,rst,clk);
     input [31:0] PC_NEXT;
     input rst,clk;
 
