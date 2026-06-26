@@ -32,10 +32,10 @@ module ALU(A,B,ALUControl,Result,Z,N,V,C);
 
     // 4:1 mux
     assign mux_2 =  (ALUControl[2:0] == 3'b000 ) ? sum : 
-                    (ALUControl[2:0] == 3'b001)? sum: 
-                    (ALUControl[2:0] = 3'b010)? a_and_b :
-                    (ALUControl[2:0] = 3'b011)?  a_or_b :
-                    (ALUControl[2:0] = 3'b101)?  slt : 32'h00000000 ;
+                    (ALUControl[2:0] == 3'b001)? sum : 
+                    (ALUControl[2:0] == 3'b010)? a_and_b :
+                    (ALUControl[2:0] == 3'b011)?  a_or_b :
+                    (ALUControl[2:0] == 3'b101)?  slt : 32'h00000000 ;
 
 
     assign Result = mux_2;
@@ -43,9 +43,9 @@ module ALU(A,B,ALUControl,Result,Z,N,V,C);
 
     // flags assignment
     assign Z  = &(~Result); //Zero flag generation
+    assign C = cout & (~ALUControl[1]); //carry flag generation
     assign N = Result[31]; //negative flag
 
-    assign C = cout & (~ALUControl[1])
 
     assign V = (~ALUControl[1]) & (A[31] ^ sum[31]) & (~(A[31] ^ B[31] ^ ALUControl[0]));
 
