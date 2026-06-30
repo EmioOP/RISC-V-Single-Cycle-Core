@@ -6,13 +6,15 @@
 `include "Control_Unit_Top.v"
 `include "Data_Memory.v"
 `include "PC_Adder.v"
+`include "Mux.v"
 
 module Single_Cycle_Top (clk,rst);
 
     input clk,rst;
-    wire [31:0] PC_Top,RD_Instr,RD1_Top,Imm_Ext_Top,ALUResult,ReadData,PCPlus4;
+    wire [31:0] PC_Top,RD_Instr,RD1_Top,Imm_Ext_Top,ALUResult,ReadData,PCPlus4,RD2_Top,SrcB,Result;
     wire [2:0] ALUControl_Top;
-    wire RegWrite;
+    wire RegWrite,MemWrite,ALUSrc,ResultSrc;
+    wire [1:0] ImmSrc;
 
     PC PC(
         .clk(clk),
@@ -35,24 +37,32 @@ module Single_Cycle_Top (clk,rst);
 
     Register_File Register_File(
                     .A1(RD_Instr[19:15]),
-                    .A2(),
+                    .A2(RD_Instr[24:20]),
                     .A3(RD_Instr[11:7]),
                     .clk(clk),
                     .WE3(RegWrite),
                     .rst(rst),
-                    .WD3(ReadData),
+                    .WD3(Result),
                     .RD1(RD1_Top),
-                    .RD2()
+                    .RD2(RD2_Top)
     );
 
     Sign_Extend Sign_Extend(
                 .In(RD_Instr[31:0]),
-                .Imm_Ext(Imm_Ext_Top)
+                .Imm_Ext(Imm_Ext_Top),
+                .ImmSrc(ImmSrc[0])
+    );
+
+    Mux Mux_Reg_to_ALU(
+        .a(RD2_Top),
+        .b(Imm_Ext_Top),
+        .s(ALUSrc),
+        .c(SrcB)
     );
 
     ALU ALU(
         .A(RD1_Top),
-        .B(Imm_Ext_Top),
+        .B(SrcB),
         .ALUControl(ALUControl_Top),
         .Result(ALUResult),
         .Z(),
@@ -65,10 +75,10 @@ module Single_Cycle_Top (clk,rst);
     Control_Unit_Top Control_Unit_Top(
                     .Op(RD_Instr[6:0]),
                     .RegWrite(RegWrite),
-                    .MemWrite(),
-                    .ImmSrc(),
-                    .ALUSrc(),
-                    .ResultSrc(),
+                    .MemWrite(MemWrite),
+                    .ImmSrc(ImmSrc),
+                    .ALUSrc(ALUSrc),
+                    .ResultSrc(ResultSrc),
                     .Branch(),
                     .funct3(RD_Instr[14:12]),
                     .funct7(),
@@ -77,11 +87,19 @@ module Single_Cycle_Top (clk,rst);
 
     Data_Memory Data_Memory(
         .A(ALUResult),
-        .WD(),
+        .WD(RD2_Top),
         .clk(clk),
         .rst(rst),
-        .WE(),
+        .WE(MemWrite),
         .RD(ReadData)
+    );
+
+
+    Mux Mux_DataMem_to_RegisterFile(
+        .a(ALUResult),
+        .b(ReadData),
+        .s(ResultSrc),
+        .c(Result)
     );
 
 

@@ -19,7 +19,8 @@ assign RD1 = (~rst) ? 32'd0 : Registers[A1];
 assign RD2 = (~rst) ? 32'd0 : Registers[A2];
 
 initial begin
-    Registers[9] = 32'h00000020;
+    Registers[5] = 32'h00000006;
+    Registers[6] = 32'h0000000A;
 end
 
 
